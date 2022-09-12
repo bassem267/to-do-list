@@ -31,42 +31,48 @@ const item3 = new Item ({
 
 const defaultItems = [item1, item2, item3];
 
-Item.insertMany(defaultItems, function(err){
-  if (err){
-    console.log(err);
-  } else{
-    console.log("Success");
-  }
-});
-
-Item.find({}, function(err, results){
-  if (err){
-    console.log(err);
-  } else{
-    console.log(results);
-  }
-});
-
 app.get("/", function(req, res) {
   Item.find({}, function(err, results){
-    res.render("list", {listTitle: "TODAY", newListItems: results});
+    if (results.length === 0 ){
+      Item.insertMany(defaultItems, function(err){
+        if (err){
+          console.log(err);
+        } else{
+          console.log("Success");
+        }
+      });
+      res.redirect("/");
+    }
+    else {
+      res.render("list", {listTitle: "TODAY",
+       newListItems: results});
+    }
   });
-
-
-
 });
 
 app.post("/", function(req, res){
 
-  const item = req.body.newItem;
+  const itemName = req.body.newItem;
 
-  if (req.body.list === "Work") {
-    workItems.push(item);
-    res.redirect("/work");
-  } else {
-    items.push(item);
-    res.redirect("/");
-  }
+  const item = new Item({
+    name: itemName
+  });
+
+  item.save();
+
+  res.redirect("/");
+});
+
+app.post("/delete", function(req, res){
+  const checked = req.body.checkbox;
+
+  Item.findByIdAndRemove(checked,function(err){
+    if (!err){
+      console.log("Success");
+    }
+  });
+
+  res.redirect("/");
 });
 
 app.get("/work", function(req,res){
